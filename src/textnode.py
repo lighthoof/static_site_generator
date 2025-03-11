@@ -41,3 +41,34 @@ def text_node_to_html_node(text_node):
             return LeafNode("img", None, {"src": text_node.url, "alt": text_node.text})
         case _:
             raise Exception("Incorrect text node type")
+
+def split_text_node_by_deilimiter(old_nodes, delimiter, text_type):
+    #new_nodes = []
+    for old_node in old_nodes:
+        nodes_so_far = []
+        old_node_string = old_node.text
+        first_postion = old_node_string.find(delimiter)
+
+        if old_node_string.count(delimiter) % 2 != 0:
+            raise Exception(f"Delimiter not closed correctly in ({old_node})" )
+        if old_node.text_type != TextType.TEXT: 
+            nodes_so_far.append(old_node)
+            continue
+        if first_postion == -1: 
+            nodes_so_far.append(old_node)
+            continue
+        
+        while old_node_string.find(delimiter) != -1:
+            split_leading_text = old_node_string.split(delimiter,1)
+            split_delimited_node = split_leading_text[1].split(delimiter,1)
+            
+            if split_leading_text[0] != "":
+                nodes_so_far.append(TextNode(split_leading_text[0], TextType.TEXT))
+            nodes_so_far.append(TextNode(split_delimited_node[0], text_type))
+
+            old_node_string = split_delimited_node[1]
+
+        if old_node_string != "":    
+            nodes_so_far.append(TextNode(old_node_string, TextType.TEXT))
+        #new_nodes.append([nodes_so_far])
+    return nodes_so_far

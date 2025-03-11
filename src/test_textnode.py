@@ -1,6 +1,6 @@
 import unittest
 
-from textnode import TextNode, TextType, text_node_to_html_node
+from textnode import TextNode, TextType, text_node_to_html_node, split_text_node_by_deilimiter
 
 
 class TestTextNode(unittest.TestCase):
@@ -49,6 +49,7 @@ class TestTextNode(unittest.TestCase):
 #################################
 ######Node conversion tests######
 ################################# 
+
 class TestTextNodeToHTMLNode(unittest.TestCase):
     def test_text_to_html(self):
         node = TextNode("This is a text node", TextType.TEXT)
@@ -87,6 +88,74 @@ class TestTextNodeToHTMLNode(unittest.TestCase):
         self.assertEqual(html_node.tag, "img")
         self.assertEqual(html_node.value, None)
         self.assertEqual(html_node.props, {"src": "https://www.boot.dev", "alt": "This is an image node"})
+
+#################################
+#######Text parsing tests########
+#################################
+
+class TestTextToNodes(unittest.TestCase):
+    def test_code_block(self):
+        node = TextNode("This is text with a `code block` word", TextType.TEXT)
+        expected = [
+            TextNode("This is text with a ", TextType.TEXT),
+            TextNode("code block", TextType.CODE),
+            TextNode(" word", TextType.TEXT),
+                ]
+        new_nodes = split_text_node_by_deilimiter([node], "`", TextType.CODE)
+        self.assertEqual(new_nodes, expected)
+    
+    def test_leading_and_trailing_blocks(self):
+        node = TextNode("`This is text` with 3 `code blocks` in `it`", TextType.TEXT)
+        expected = [
+            TextNode("This is text", TextType.CODE),
+            TextNode(" with 3 ", TextType.TEXT),
+            TextNode("code blocks", TextType.CODE),
+            TextNode(" in ", TextType.TEXT),
+            TextNode("it", TextType.CODE),
+        ]
+        new_nodes = split_text_node_by_deilimiter([node], "`", TextType.CODE)
+        self.assertEqual(new_nodes, expected)
+
+    def test_multiple_input_nodes(self):
+        nodes = [
+            TextNode("`This is text` with 3 `code blocks` in `it`", TextType.TEXT),
+            TextNode("This is text with a `code block` word", TextType.TEXT),
+        ]
+        new_nodes = split_text_node_by_deilimiter(nodes, "`", TextType.CODE)
+        expected = [
+            [
+                TextNode("This is text", TextType.CODE),
+                TextNode(" with 3 ", TextType.TEXT),
+                TextNode("code blocks", TextType.CODE),
+                TextNode(" in ", TextType.TEXT),
+                TextNode("it", TextType.CODE),
+            ],
+            [
+                TextNode("This is text with a ", TextType.TEXT),
+                TextNode("code block", TextType.CODE),
+                TextNode(" word", TextType.TEXT),
+            ]
+        ]
+        self.assertEqual([new_nodes], expected)
+
+    def test_plain_text_node(self):
+        node = TextNode("`This` is text with _no_ expected delimiters", TextType.TEXT)
+
+        new_nodes = split_text_node_by_deilimiter([node], "**", TextType.CODE)
+        expected = TextNode("`This` is text with _no_ expected delimiters", TextType.TEXT)
+        self.assertEqual(new_nodes, [expected])
+
+    def test_not_text_type(self):
+        node = TextNode("code block", TextType.CODE)
+        expected =  TextNode("code block", TextType.CODE)
+        new_nodes = split_text_node_by_deilimiter([node], "**", TextType.CODE)
+        self.assertEqual(new_nodes, [expected])
+
+    def test_unclosed_delimiter(self):
+        node = TextNode("This is text with an unclosed `code block` word `here", TextType.TEXT)
+        with self.assertRaises(Exception) as error:
+            split_text_node_by_deilimiter([node], "`", TextType.CODE)
+        self.assertTrue("Delimiter not closed correctly in" in str(error.exception)) 
 
 if __name__ == "__main__":
     unittest.main()
