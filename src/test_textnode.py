@@ -1,6 +1,8 @@
 import unittest
 
-from textnode import TextNode, TextType, text_node_to_html_node, split_text_node_by_delimiter, split_text_node_list
+from textnode import (TextNode, TextType, text_node_to_html_node, 
+                      split_text_node_by_delimiter, split_text_node_list, 
+                      extract_markdown_images, extract_markdown_links)
 
 
 class TestTextNode(unittest.TestCase):
@@ -175,6 +177,18 @@ class TestTextToNodes(unittest.TestCase):
         with self.assertRaises(Exception) as error:
             split_text_node_by_delimiter(node, "`", TextType.CODE)
         self.assertTrue("Delimiter not closed correctly in" in str(error.exception)) 
+
+    def test_extract_markdown_images(self):
+        matches = extract_markdown_images(
+        "This is text with an ![image](https://i.imgur.com/zjjcJKZ.png)"
+        )
+        self.assertListEqual([("image", "https://i.imgur.com/zjjcJKZ.png")], matches)
+
+    def test_extract_markdown_links(self):
+        matches = extract_markdown_links(
+        "This is text with a [link](https://i.imgur.com/zjjcJKZ.png)"
+        )
+        self.assertListEqual([("link", "https://i.imgur.com/zjjcJKZ.png")], matches)
 
 if __name__ == "__main__":
     unittest.main()
