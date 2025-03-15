@@ -43,7 +43,7 @@ def text_node_to_html_node(text_node):
         case _:
             raise Exception("Incorrect text node type")
 
-def split_text_node_by_delimiter(old_node, delimiter, text_type):
+def split_text_node_by_delimiter(old_node, text_type, delimiter):
     nodes_so_far = []
     old_node_string = old_node.text
     first_postion = old_node_string.find(delimiter)
@@ -71,10 +71,62 @@ def split_text_node_by_delimiter(old_node, delimiter, text_type):
         nodes_so_far.append(TextNode(old_node_string, TextType.TEXT))
     return nodes_so_far
 
-def split_text_node_list(old_nodes, delimiter, text_type):
+def split_image_node(old_node):
+    nodes_so_far = []
+    old_node_string = old_node.text
+    image_nodes_data = extract_markdown_images(old_node_string)
+
+    if image_nodes_data == []:
+        return old_node
+    
+    for image_data in image_nodes_data:
+        alt_text = image_data[0]
+        image_link = image_data[1]
+        split_node_text = old_node_string.split(f"![{alt_text}]({image_link})",1)
+        old_node_string = split_node_text[1]
+
+        if split_node_text[0] != "":
+            nodes_so_far.append(TextNode(split_node_text[0], TextType.TEXT))
+        nodes_so_far.append(TextNode(alt_text, TextType.IMAGE, image_link))
+
+    if old_node_string != "":    
+        nodes_so_far.append(TextNode(old_node_string, TextType.TEXT))
+    return nodes_so_far        
+
+def split_link_node(old_node):
+    nodes_so_far = []
+    old_node_string = old_node.text
+    link_nodes_data = extract_markdown_links(old_node.text)
+    
+    if link_nodes_data == []:
+        return old_node
+    
+    for link_data in link_nodes_data:
+        link_text = link_data[0]
+        link = link_data[1]
+        split_node_text = old_node_string.split(f"[{link_text}]({link})",1)
+        old_node_string = split_node_text[1]
+
+        if split_node_text[0] != "":
+            nodes_so_far.append(TextNode(split_node_text[0], TextType.TEXT))
+        nodes_so_far.append(TextNode(link_text, TextType.LINK, link))
+
+    if old_node_string != "":    
+        nodes_so_far.append(TextNode(old_node_string, TextType.TEXT))
+    return nodes_so_far   
+
+def split_node_list(old_nodes, text_type, delimiter=None):
     new_nodes = []
     for old_node in old_nodes:
-        new_nodes.append(split_text_node_by_delimiter(old_node, delimiter, text_type))
+        match text_type:
+            case TextType.IMAGE:
+                new_nodes.append(split_image_node(old_node))
+            case TextType.LINK:
+                new_nodes.append(split_link_node(old_node))
+            case _:
+                if delimiter is None :
+                    raise ValueError("Text type node should have delimiter set")
+                new_nodes.append(split_text_node_by_delimiter(old_node, text_type, delimiter))
     return new_nodes
 
 def extract_markdown_images(text):
