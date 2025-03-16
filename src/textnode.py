@@ -25,7 +25,8 @@ class TextNode():
     
     def __repr__(self):
         return f"TextNode({self.text}, {self.text_type.value}, {self.url})"
-    
+
+#To add handling for LINK and IMAGE nodes without a link here
 def text_node_to_html_node(text_node):
     match text_node.text_type:
         case TextType.TEXT:
@@ -77,7 +78,8 @@ def split_image_node(old_node):
     image_nodes_data = extract_markdown_images(old_node_string)
 
     if image_nodes_data == []:
-        return old_node
+        nodes_so_far.append(old_node)
+        return nodes_so_far
     
     for image_data in image_nodes_data:
         alt_text = image_data[0]
@@ -99,7 +101,8 @@ def split_link_node(old_node):
     link_nodes_data = extract_markdown_links(old_node.text)
     
     if link_nodes_data == []:
-        return old_node
+        nodes_so_far.append(old_node)
+        return nodes_so_far
     
     for link_data in link_nodes_data:
         link_text = link_data[0]
@@ -120,13 +123,13 @@ def split_node_list(old_nodes, text_type, delimiter=None):
     for old_node in old_nodes:
         match text_type:
             case TextType.IMAGE:
-                new_nodes.append(split_image_node(old_node))
+                new_nodes.extend(split_image_node(old_node))
             case TextType.LINK:
-                new_nodes.append(split_link_node(old_node))
+                new_nodes.extend(split_link_node(old_node))
             case _:
                 if delimiter is None :
                     raise ValueError("Text type node should have delimiter set")
-                new_nodes.append(split_text_node_by_delimiter(old_node, text_type, delimiter))
+                new_nodes.extend(split_text_node_by_delimiter(old_node, text_type, delimiter))
     return new_nodes
 
 def extract_markdown_images(text):
@@ -134,3 +137,11 @@ def extract_markdown_images(text):
     
 def extract_markdown_links(text):
     return re.findall(r"(?<!!)\[([^\[\]]*)\]\(([^\(\)]*)\)", text)
+
+def markdown_to_text_nodes(text_string):
+    split_bold = split_node_list([TextNode(text_string, TextType.TEXT)], TextType.BOLD, "**")
+    split_italic = split_node_list(split_bold, TextType.ITALIC, "_")
+    split_code = split_node_list(split_italic, TextType.CODE, '`')
+    split_images = split_node_list(split_code, TextType.IMAGE)
+    split_links = split_node_list(split_images, TextType.LINK)
+    return split_links

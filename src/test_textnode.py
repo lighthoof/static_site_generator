@@ -3,7 +3,7 @@ import unittest
 from textnode import (TextNode, TextType, text_node_to_html_node, 
                       split_text_node_by_delimiter, split_node_list, 
                       extract_markdown_images, extract_markdown_links,
-                      split_image_node, split_link_node)
+                      split_image_node, split_link_node, markdown_to_text_nodes)
 
 
 class TestTextNode(unittest.TestCase):
@@ -152,18 +152,14 @@ class TestTextToNodes(unittest.TestCase):
         ]
         new_nodes = split_node_list(nodes, TextType.CODE,  "`")
         expected = [
-            [
                 TextNode("This is text", TextType.CODE),
                 TextNode(" with 3 ", TextType.TEXT),
                 TextNode("code blocks", TextType.CODE),
                 TextNode(" in ", TextType.TEXT),
                 TextNode("it", TextType.CODE),
-            ],
-            [
                 TextNode("This is text with a ", TextType.TEXT),
                 TextNode("code block", TextType.CODE),
                 TextNode(" word", TextType.TEXT),
-            ]
         ]
         self.assertEqual(new_nodes, expected)
 
@@ -223,6 +219,73 @@ class TestTextToNodes(unittest.TestCase):
             new_nodes,
         )
 
+    def test_split_images_no_image(self):
+        node = TextNode(
+            "This is text with an image(https://i.imgur.com/zjjcJKZ.png) and another second image(https://i.imgur.com/3elNhQu.png)",
+            TextType.TEXT,
+        )
+        new_nodes = split_image_node(node)
+        expected = [TextNode("This is text with an image(https://i.imgur.com/zjjcJKZ.png) and another second image(https://i.imgur.com/3elNhQu.png)", TextType.TEXT)]
+        self.assertEqual(expected,
+            new_nodes
+            )
+
+    def test_leading_and_trailing_Images(self):
+        node = TextNode(
+            "![image](https://i.imgur.com/zjjcJKZ.png) between images ![second image](https://i.imgur.com/3elNhQu.png)",
+            TextType.TEXT,
+        )
+        new_nodes = split_image_node(node)
+        self.assertListEqual(
+            [
+                TextNode("image", TextType.IMAGE, "https://i.imgur.com/zjjcJKZ.png"),
+                TextNode(" between images ", TextType.TEXT),
+                TextNode(
+                    "second image", TextType.IMAGE, "https://i.imgur.com/3elNhQu.png"
+                ),
+            ],
+            new_nodes,
+        )
+
+    def test_multiple_image_nodes(self):
+        nodes = [
+            TextNode("This is text with an ![image](https://i.imgur.com/zjjcJKZ.png) and another ![second image](https://i.imgur.com/3elNhQu.png)", TextType.TEXT),
+            TextNode("![image](https://i.imgur.com/zjjcJKZ.png) between images ![second image](https://i.imgur.com/3elNhQu.png)", TextType.TEXT),
+        ]
+        new_nodes = split_node_list(nodes, TextType.IMAGE)
+        expected = [
+                TextNode("This is text with an ", TextType.TEXT),
+                TextNode("image", TextType.IMAGE, "https://i.imgur.com/zjjcJKZ.png"),
+                TextNode(" and another ", TextType.TEXT),
+                TextNode(
+                    "second image", TextType.IMAGE, "https://i.imgur.com/3elNhQu.png"
+                ),
+                TextNode("image", TextType.IMAGE, "https://i.imgur.com/zjjcJKZ.png"),
+                TextNode(" between images ", TextType.TEXT),
+                TextNode(
+                    "second image", TextType.IMAGE, "https://i.imgur.com/3elNhQu.png"
+                ),
+        ]
+        self.assertEqual(new_nodes, expected)
+
+    def test_multiple_nodes_one_image(self):
+        nodes = [
+            TextNode("This is text with an ![image](https://i.imgur.com/zjjcJKZ.png) and another ![second image](https://i.imgur.com/3elNhQu.png)", TextType.TEXT),
+            TextNode("[image]!(https://i.imgur.com/zjjcJKZ.png) between images [second image]!(https://i.imgur.com/3elNhQu.png)", TextType.TEXT),
+        ]
+        new_nodes = split_node_list(nodes, TextType.IMAGE)
+        expected = [
+                TextNode("This is text with an ", TextType.TEXT),
+                TextNode("image", TextType.IMAGE, "https://i.imgur.com/zjjcJKZ.png"),
+                TextNode(" and another ", TextType.TEXT),
+                TextNode(
+                    "second image", TextType.IMAGE, "https://i.imgur.com/3elNhQu.png"
+                ),
+                TextNode("[image]!(https://i.imgur.com/zjjcJKZ.png) between images [second image]!(https://i.imgur.com/3elNhQu.png)", TextType.TEXT),
+                
+        ]
+        self.assertEqual(new_nodes, expected)
+
     def test_split_links(self):
         node = TextNode(
             "This is text with an [link](https://i.imgur.com/zjjcJKZ.png) and another [second link](https://i.imgur.com/3elNhQu.png)",
@@ -240,6 +303,72 @@ class TestTextToNodes(unittest.TestCase):
             ],
             new_nodes,
         )
+
+    def test_split_links_no_link(self):
+        node = TextNode(
+            "This is text with a link(https://i.imgur.com/zjjcJKZ.png) and another second link(https://i.imgur.com/3elNhQu.png)",
+            TextType.TEXT,
+        )
+        new_nodes = split_link_node(node)
+        expected = [TextNode("This is text with a link(https://i.imgur.com/zjjcJKZ.png) and another second link(https://i.imgur.com/3elNhQu.png)", TextType.TEXT)]
+        self.assertEqual(expected,
+            new_nodes
+            )
+        
+    def test_leading_and_trailing_links(self):
+        node = TextNode(
+            "[link](https://i.imgur.com/zjjcJKZ.png) between links [second link](https://i.imgur.com/3elNhQu.png)",
+            TextType.TEXT,
+        )
+        new_nodes = split_link_node(node)
+        self.assertListEqual(
+            [
+                TextNode("link", TextType.LINK, "https://i.imgur.com/zjjcJKZ.png"),
+                TextNode(" between links ", TextType.TEXT),
+                TextNode(
+                    "second link", TextType.LINK, "https://i.imgur.com/3elNhQu.png"
+                ),
+            ],
+            new_nodes,
+        )
+
+    def test_multiple_link_nodes(self):
+        nodes = [
+            TextNode("This is text with an [link](https://i.imgur.com/zjjcJKZ.png) and another [second link](https://i.imgur.com/3elNhQu.png)", TextType.TEXT),
+            TextNode("[link](https://i.imgur.com/zjjcJKZ.png) between links [second link](https://i.imgur.com/3elNhQu.png)", TextType.TEXT),
+        ]
+        new_nodes = split_node_list(nodes, TextType.LINK)
+        expected = [
+                TextNode("This is text with an ", TextType.TEXT),
+                TextNode("link", TextType.LINK, "https://i.imgur.com/zjjcJKZ.png"),
+                TextNode(" and another ", TextType.TEXT),
+                TextNode(
+                    "second link", TextType.LINK, "https://i.imgur.com/3elNhQu.png"
+                ),
+                TextNode("link", TextType.LINK, "https://i.imgur.com/zjjcJKZ.png"),
+                TextNode(" between links ", TextType.TEXT),
+                TextNode(
+                    "second link", TextType.LINK, "https://i.imgur.com/3elNhQu.png"
+                ),
+        ]
+        self.assertListEqual(new_nodes, expected)
+
+    def test_full_conversion(self):
+        text = "This is **text** with an _italic_ word and a `code block` and an ![obi wan image](https://i.imgur.com/fJRm4Vk.jpeg) and a [link](https://boot.dev)"
+        result = markdown_to_text_nodes(text)
+        expected = [
+            TextNode("This is ", TextType.TEXT),
+            TextNode("text", TextType.BOLD),
+            TextNode(" with an ", TextType.TEXT),
+            TextNode("italic", TextType.ITALIC),
+            TextNode(" word and a ", TextType.TEXT),
+            TextNode("code block", TextType.CODE),
+            TextNode(" and an ", TextType.TEXT),
+            TextNode("obi wan image", TextType.IMAGE, "https://i.imgur.com/fJRm4Vk.jpeg"),
+            TextNode(" and a ", TextType.TEXT),
+            TextNode("link", TextType.LINK, "https://boot.dev"),
+        ]
+        self.assertListEqual(result, expected)
 
 if __name__ == "__main__":
     unittest.main()
