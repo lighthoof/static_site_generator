@@ -1,7 +1,9 @@
-from textnode import TextNode, TextType, markdown_to_text_nodes
+from textnode import TextNode, TextType
 from htmlnode import ParentNode, LeafNode
+from block_markdown import check_heading
+
 
 def main():
-    pass
+    print(check_heading("#Heading ## "))
     
 main()
