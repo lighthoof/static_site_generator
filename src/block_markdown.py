@@ -34,14 +34,14 @@ def block_to_block_type(block):
 def markdown_to_blocks(markdown):
     split_text = markdown.split("\n\n")
     for i in range(len(split_text)-1, -1 , -1):
-        split_text[i] = split_text[i].strip(" \n")
+        split_text[i] = split_text[i].strip()
         if split_text[i] == "":
             del(split_text[i])
 
     return split_text
 
 def check_heading(heading):
-    return re.findall(r"#{1,7} ", heading[0:7]) != []
+    return len(re.findall(r"#{1,7} ", heading[0:7])) > 0
 
 def check_code_block(code):
     return (code[0:3] == code[len(code)-3:len(code)])

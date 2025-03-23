@@ -31,7 +31,7 @@ class HTMLNode():
                 props_to_string += f" {key}=\"{value}\""
         else:
             props_to_string = "None"
-        return(f"HTMLNode(tag: {self.tag}\nvalue: {self.value}\nchildren: {self.children}\nprops: {props_to_string})")
+        return(f"HTMLNode(tag: {self.tag}, value: {self.value}, children: {self.children}, props: {props_to_string})")
     
 class LeafNode(HTMLNode):
     def __init__(self, tag, value, props=None):

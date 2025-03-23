@@ -74,7 +74,7 @@ class TestHTMLNode(unittest.TestCase):
     def test_repr_chld(self):
         node = HTMLNode("<h1>", "Nothing is happening", "<p>", None)
         self.assertEqual(
-            "HTMLNode(tag: <h1>\nvalue: Nothing is happening\nchildren: <p>\nprops: None)", repr(node)
+            "HTMLNode(tag: <h1>, value: Nothing is happening, children: <p>, props: None)", repr(node)
         )
 
     def test_repr_props(self):
@@ -84,7 +84,7 @@ class TestHTMLNode(unittest.TestCase):
                 }
         node = HTMLNode("<a>", "Something is happening", None, props)
         self.assertEqual(
-            f"HTMLNode(tag: <a>\nvalue: Something is happening\nchildren: None\nprops:  href=\"https://www.google.com\" target=\"_blank\")",
+            f"HTMLNode(tag: <a>, value: Something is happening, children: None, props:  href=\"https://www.google.com\" target=\"_blank\")",
             repr(node)
         )
 
