@@ -12,7 +12,14 @@ text in a p
 tag here
 
 This is another paragraph with _italic_ text and `code` here
+
+```
+This is text that _should_ remain
+the **same** even with inline stuff
+```
 """
+    print(
     markdown_to_html_node(text)
+        )
     
 main()
