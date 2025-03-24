@@ -47,7 +47,7 @@ def check_code_block(code):
     return (code[0:3] == code[len(code)-3:len(code)])
 
 def check_quote(quote):
-    lines = quote.split("\n")
+    lines = quote.strip().split("\n")
     for line in lines:
         if line[0] != ">":
             return False

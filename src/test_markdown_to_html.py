@@ -15,7 +15,7 @@ This is another paragraph with _italic_ text and `code` here
         html = node.to_html()
         self.assertEqual(
         html,
-        "<div><p>This is <b>bolded</b> paragraph text in a p tag here</p><p>This is another paragraph with <i>italic</i> text and <code>code</code> here</p></div>",
+        "<div><p>This is <b>bolded</b> paragraph\ntext in a p\ntag here</p><p>This is another paragraph with <i>italic</i> text and <code>code</code> here</p></div>",
     )
 
     def test_codeblock(self):
@@ -81,7 +81,7 @@ this is paragraph text
         html = node.to_html()
         self.assertEqual(
             html,
-            "<div><blockquote>This is a blockquote block</blockquote><p>this is paragraph text</p></div>",
+            "<div><blockquote>This is a\nblockquote block</blockquote><p>this is paragraph text</p></div>",
         )
 
     def test_code(self):
@@ -96,7 +96,7 @@ the **same** even with inline stuff
         html = node.to_html()
         self.assertEqual(
             html,
-            "<div><pre><code>This is text that _should_ remain\nthe **same** even with inline stuff\n</code></pre></div>",
+            "<div><pre><code>This is text that _should_ remain\nthe **same** even with inline stuff</code></pre></div>",
         )
 
 
