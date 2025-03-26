@@ -2,8 +2,7 @@ import os
 import shutil
 from logging import log
 
-def cleanup_public_content():
-    folder = "public"
+def cleanup_public_content(folder = "public"): 
     if os.path.exists(folder):
         for filename in os.listdir(folder):
             path = os.path.join(folder, filename)
