@@ -1,5 +1,5 @@
 import unittest
-from build_doc import extract_title
+from build_site import extract_title
 
 class TestBuildDoc(unittest.TestCase):
     def test_extract_title(self):
