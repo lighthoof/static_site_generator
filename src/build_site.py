@@ -36,18 +36,17 @@ def generate_page(from_path, template_path, dest_path, basepath):
     
     html_in_template = template_doc.replace("{{ Content }}", html_doc)
     html_with_title = html_in_template.replace("{{ Title }}", title)
-    print(basepath)
     html_with_href_path = html_with_title.replace('href="/', f'href="/{basepath}')
     html_with_src_path = html_with_href_path.replace('src="/', f'src="/{basepath}')
 
     check_and_create_path(dest_path)
         
     with open(dest_path, "w") as dest_file:
-        dest_file.write(html_with_title)
+        dest_file.write(html_with_src_path)
 
 def generate_pages_recursively(dir_path_content="content", template_path="template.html", dest_dir_path="public", basepath="" ):
-    full_dest = basepath + dest_dir_path
-    log(f"Generating site from {dir_path_content} to {full_dest} using {template_path}")
+    #full_dest = basepath + dest_dir_path
+    log(f"Generating site from {dir_path_content} to {dest_dir_path} using {template_path}")
     if not os.path.exists(dir_path_content):
         raise FileNotFoundError("Provided content path does not exist")
     
@@ -57,10 +56,10 @@ def generate_pages_recursively(dir_path_content="content", template_path="templa
         if entity.is_file():
             if entity.name.split(".")[-1] == "md":
                 markdown_file = dir_path_content + "/" + entity.name
-                html_doc = full_dest + "/" + entity.name.split(".")[0]  + ".html"
+                html_doc = dest_dir_path + "/" + entity.name.split(".")[0]  + ".html"
                 generate_page(markdown_file, template_path, html_doc, basepath)
         elif entity.is_dir():
             current_content_path += "/" + entity.name
-            current_dest_path = full_dest + "/" + entity.name
+            current_dest_path = dest_dir_path + "/" + entity.name
             generate_pages_recursively(current_content_path, template_path, current_dest_path, basepath)
     
